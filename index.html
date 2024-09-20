@@ -117,6 +117,20 @@
             margin-top: 10px;
             color: #4CAF50;
         }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -137,6 +151,7 @@
                 <input type="tel" id="telefone" placeholder="Seu número de telefone" required>
                 <button type="submit" class="button">Enviar</button>
             </form>
+            <div class="loader" id="loader"></div>
             <div id="message"></div>
         </div>
     </div>
@@ -158,14 +173,15 @@
 
         // Contagem regressiva
         const countdownElement = document.getElementById('countdown');
-        const launchDate = new Date('2024-09-23T21:00:00'); // Data e hora de término
+        const launchDate = new Date('2024-09-23T21:00:00'); // Nova data e hora de término
         function updateCountdown() {
             const currentTime = new Date().getTime();
             const distance = launchDate - currentTime;
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            countdownElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+            countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
             if (distance < 0) {
                 clearInterval(countdownInterval);
                 countdownElement.innerHTML = 'Lançado!';
@@ -180,6 +196,7 @@
         const span = document.getElementsByClassName('close')[0];
         const form = document.getElementById('notifyForm');
         const messageDiv = document.getElementById('message');
+        const loader = document.getElementById('loader');
 
         btn.onclick = function() {
             modal.style.display = 'block';
@@ -200,21 +217,29 @@
             const nome = document.getElementById('nome').value;
             const telefone = document.getElementById('telefone').value;
 
+            // Mostrar o loader e esconder o formulário
+            loader.style.display = 'block';
+            form.style.display = 'none';
+
             $.ajax({
                 url: 'https://webhostapi.vercel.app/voyage/api/vetor',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ nome, telefone }),
                 success: function(response) {
+                    loader.style.display = 'none';
                     messageDiv.innerHTML = 'Obrigado! Você será notificado em breve.';
                     form.reset();
                     setTimeout(() => {
                         modal.style.display = 'none';
                         messageDiv.innerHTML = '';
+                        form.style.display = 'block'; // Mostrar o formulário novamente para futuras submissões
                     }, 3000);
                 },
                 error: function() {
+                    loader.style.display = 'none';
                     messageDiv.innerHTML = 'Ocorreu um erro. Por favor, tente novamente mais tarde.';
+                    form.style.display = 'block'; // Mostrar o formulário novamente em caso de erro
                 }
             });
         }
