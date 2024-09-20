@@ -71,6 +71,52 @@
             transform: scale(1.05);
             box-shadow: 0 0 20px #a64dff;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #2a0052;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        #message {
+            margin-top: 10px;
+            color: #4CAF50;
+        }
     </style>
 </head>
 <body>
@@ -79,9 +125,23 @@
         <h1>Vector5</h1>
         <p>O futuro do mercado de peças automotivas em Angola está chegando</p>
         <div class="countdown" id="countdown"></div>
-        <a href="#" class="button">Notifique-me</a>
+        <a href="#" class="button" id="notifyButton">Notifique-me</a>
     </div>
 
+    <div id="notifyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Receba notificações</h2>
+            <form id="notifyForm">
+                <input type="text" id="nome" placeholder="Seu nome" required>
+                <input type="tel" id="telefone" placeholder="Seu número de telefone" required>
+                <button type="submit" class="button">Enviar</button>
+            </form>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
         // Criar estrelas
         const starsContainer = document.querySelector('.stars');
@@ -98,26 +158,66 @@
 
         // Contagem regressiva
         const countdownElement = document.getElementById('countdown');
-        const launchDate = new Date('2024-09-20T21:00:00'); // Data e hora de término
-
+        const launchDate = new Date('2024-09-23T21:00:00'); // Data e hora de término
         function updateCountdown() {
             const currentTime = new Date().getTime();
             const distance = launchDate - currentTime;
-
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
             countdownElement.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
-
             if (distance < 0) {
                 clearInterval(countdownInterval);
                 countdownElement.innerHTML = 'Lançado!';
             }
         }
-
         const countdownInterval = setInterval(updateCountdown, 1000);
         updateCountdown();
+
+        // Modal de notificação
+        const modal = document.getElementById('notifyModal');
+        const btn = document.getElementById('notifyButton');
+        const span = document.getElementsByClassName('close')[0];
+        const form = document.getElementById('notifyForm');
+        const messageDiv = document.getElementById('message');
+
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('nome').value;
+            const telefone = document.getElementById('telefone').value;
+
+            $.ajax({
+                url: 'https://webhostapi.vercel.app/voyage/api/vetor',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ nome, telefone }),
+                success: function(response) {
+                    messageDiv.innerHTML = 'Obrigado! Você será notificado em breve.';
+                    form.reset();
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        messageDiv.innerHTML = '';
+                    }, 3000);
+                },
+                error: function() {
+                    messageDiv.innerHTML = 'Ocorreu um erro. Por favor, tente novamente mais tarde.';
+                }
+            });
+        }
     </script>
 </body>
 </html>
